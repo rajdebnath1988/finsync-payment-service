@@ -29,7 +29,8 @@ pipeline {
             }
             steps {
                 withSonarQubeEnv('SonarCloud') { 
-                    sh 'mvn sonar:sonar -Dsonar.organization=rajdebnath1988 -Dsonar.projectKey=rajdebnath1988_finsync-payment-service -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=$SONAR_AUTH_TOKEN'
+                    //sh 'mvn sonar:sonar -Dsonar.organization=rajdebnath1988 -Dsonar.projectKey=rajdebnath1988_finsync-payment-service -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=$SONAR_AUTH_TOKEN'
+                    sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.organization=rajdebnath1988 -Dsonar.projectKey=rajdebnath1988_finsync-payment-service -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=$SONAR_AUTH_TOKEN'
                 }
             }
         }
