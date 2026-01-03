@@ -14,7 +14,10 @@ spec:
     spec:
       containers:
       - name: finsync-container
-        image: <YOUR_AWS_ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/finsync-repo:latest
+        # I filled in your real Account ID (279606006025) and Region (us-east-1)
+        # Note: Your Jenkins pipeline will automatically overwrite the ':latest' tag 
+        # with the specific build number (e.g., :5) during deployment.
+        image: 279606006025.dkr.ecr.us-east-1.amazonaws.com/finsync-repo:latest
         ports:
         - containerPort: 8080
 ---
