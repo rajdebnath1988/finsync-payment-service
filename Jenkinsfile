@@ -43,7 +43,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    dockerImage = docker.build("${ECR_REGISTRY}/${IMAGE_REPO_NAME}:${env.BUILD_NUMBER}")
+                    def dockerImage = docker.build("${ECR_REGISTRY}/${IMAGE_REPO_NAME}:${env.BUILD_NUMBER}")
+                    //dockerImage = docker.build("${ECR_REGISTRY}/${IMAGE_REPO_NAME}:${env.BUILD_NUMBER}")
                 }
             }
         }
