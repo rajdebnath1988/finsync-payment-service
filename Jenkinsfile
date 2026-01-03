@@ -43,8 +43,9 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def dockerImage = docker.build("${ECR_REGISTRY}/${IMAGE_REPO_NAME}:${env.BUILD_NUMBER}")
-                    //dockerImage = docker.build("${ECR_REGISTRY}/${IMAGE_REPO_NAME}:${env.BUILD_NUMBER}")
+                    // We just build it here. Docker stores the image in its local cache.
+                    // We don't need to save it to a variable anymore.
+                    docker.build("${ECR_REGISTRY}/${IMAGE_REPO_NAME}:${env.BUILD_NUMBER}")
                 }
             }
         }
@@ -52,16 +53,21 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 script {
-                    // FIXED: Uses the specific AWS Credentials Binding class
                     withCredentials([[
                         $class: 'AmazonWebServicesCredentialsBinding',
                         credentialsId: 'aws-creds',
                         accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                         secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
                     ]]) {
+                        // 1. Log in to ECR
                         sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
-                        dockerImage.push()
-                        dockerImage.push('latest')
+                        
+                        // 2. Tag the image as 'latest' (It already has the Build Number tag from the previous stage)
+                        sh "docker tag ${ECR_REGISTRY}/${IMAGE_REPO_NAME}:${env.BUILD_NUMBER} ${ECR_REGISTRY}/${IMAGE_REPO_NAME}:latest"
+                        
+                        // 3. Push both versions using standard shell commands
+                        sh "docker push ${ECR_REGISTRY}/${IMAGE_REPO_NAME}:${env.BUILD_NUMBER}"
+                        sh "docker push ${ECR_REGISTRY}/${IMAGE_REPO_NAME}:latest"
                     }
                 }
             }
@@ -70,7 +76,6 @@ pipeline {
         stage('Deploy to EKS') {
             steps {
                 script {
-                    // FIXED: Uses the specific AWS Credentials Binding class
                     withCredentials([[
                         $class: 'AmazonWebServicesCredentialsBinding',
                         credentialsId: 'aws-creds',
