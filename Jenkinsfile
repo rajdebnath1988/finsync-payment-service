@@ -28,7 +28,6 @@ pipeline {
             }
             steps {
                 withSonarQubeEnv('SonarCloud') { 
-                    // FIXED COMMAND BELOW
                     sh 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.organization=rajdebnath1988 -Dsonar.projectKey=rajdebnath1988_finsync-payment-service -Dsonar.host.url=https://sonarcloud.io -Dsonar.token=$SONAR_AUTH_TOKEN'
                 }
             }
@@ -51,8 +50,14 @@ pipeline {
         
         stage('Push to ECR') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'aws-creds', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-                    script {
+                script {
+                    // FIXED: Uses the specific AWS Credentials Binding class
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: 'aws-creds',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    ]]) {
                         sh "aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
                         dockerImage.push()
                         dockerImage.push('latest')
@@ -63,8 +68,14 @@ pipeline {
         
         stage('Deploy to EKS') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'aws-creds', passwordVariable: 'AWS_SECRET_ACCESS_KEY', usernameVariable: 'AWS_ACCESS_KEY_ID')]) {
-                    script {
+                script {
+                    // FIXED: Uses the specific AWS Credentials Binding class
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: 'aws-creds',
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    ]]) {
                         sh """
                         aws eks update-kubeconfig --region ${AWS_DEFAULT_REGION} --name finsync-cluster
                         sed -i 's|image: .*|image: ${ECR_REGISTRY}/${IMAGE_REPO_NAME}:${env.BUILD_NUMBER}|' deployment.yaml
